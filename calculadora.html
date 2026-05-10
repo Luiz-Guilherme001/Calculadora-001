@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora | Luiz Guilherme</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f0f0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .calc {
+      background: #ffffff;
+      border: 1px solid #e0e0e0;
+      border-radius: 24px;
+      padding: 1.75rem;
+      width: 300px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+    }
+
+    /* Display */
+    .display {
+      background: #f7f7f7;
+      border-radius: 14px;
+      padding: 1rem 1.25rem;
+      text-align: right;
+      margin-bottom: 1.25rem;
+      border: 1px solid #ebebeb;
+    }
+
+    .display .expr {
+      font-size: 0.78rem;
+      color: #aaa;
+      min-height: 1.2rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .display .result {
+      font-size: 2.4rem;
+      color: #111;
+      font-weight: 300;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Grid de botões */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.6rem;
+    }
+
+    button {
+      padding: 1rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    button:active { transform: scale(0.93); }
+    button:hover  { filter: brightness(0.95); }
+
+    /* Tipos de botão */
+    .btn-num   { background: #f2f2f2; color: #222; }
+    .btn-op    { background: #e8e8e8; color: #444; font-weight: 600; }
+    .btn-eq    { background: #222;    color: #fff; font-weight: 700; }
+    .btn-clear { background: #ffe5e5; color: #cc3333; font-weight: 600; }
+    .btn-zero  { grid-column: span 2; }
+
+    .author {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.72rem;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+
+<div class="calc">
+  <!-- Display -->
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="result" id="result">0</div>
+  </div>
+
+  <!-- Botões -->
+  <div class="buttons">
+    <button class="btn-clear" onclick="clearAll()">AC</button>
+    <button class="btn-op"    onclick="deleteLast()">⌫</button>
+    <button class="btn-op"    onclick="appendOp('%')">%</button>
+    <button class="btn-op"    onclick="appendOp('/')">÷</button>
+
+    <button class="btn-num"   onclick="appendNum('7')">7</button>
+    <button class="btn-num"   onclick="appendNum('8')">8</button>
+    <button class="btn-num"   onclick="appendNum('9')">9</button>
+    <button class="btn-op"    onclick="appendOp('*')">×</button>
+
+    <button class="btn-num"   onclick="appendNum('4')">4</button>
+    <button class="btn-num"   onclick="appendNum('5')">5</button>
+    <button class="btn-num"   onclick="appendNum('6')">6</button>
+    <button class="btn-op"    onclick="appendOp('-')">−</button>
+
+    <button class="btn-num"   onclick="appendNum('1')">1</button>
+    <button class="btn-num"   onclick="appendNum('2')">2</button>
+    <button class="btn-num"   onclick="appendNum('3')">3</button>
+    <button class="btn-op"    onclick="appendOp('+')">+</button>
+
+    <button class="btn-num btn-zero" onclick="appendNum('0')">0</button>
+    <button class="btn-num"   onclick="appendDecimal()">.</button>
+    <button class="btn-eq"    onclick="calculate()">=</button>
+  </div>
+
+  <p class="author">Luiz Guilherme · 2025</p>
+</div>
+
+<script>
+  var expression = ''; // expressão atual
+
+  var displayResult = document.getElementById('result');
+  var displayExpr   = document.getElementById('expr');
+
+  // Atualiza o display
+  function updateDisplay(value) {
+    displayResult.textContent = value;
+  }
+
+  // Adiciona número
+  function appendNum(num) {
+    expression += num;
+    updateDisplay(expression);
+  }
+
+  // Adiciona operador
+  function appendOp(op) {
+    // Evita dois operadores seguidos
+    if (expression === '') return;
+    var last = expression.slice(-1);
+    if (['+','-','*','/','%'].includes(last)) {
+      expression = expression.slice(0, -1);
+    }
+    expression += op;
+    updateDisplay(expression.replace('*','×').replace('/','÷'));
+  }
+
+  // Adiciona ponto decimal
+  function appendDecimal() {
+    // Pega o último número digitado
+    var parts = expression.split(/[\+\-\*\/]/);
+    var lastPart = parts[parts.length - 1];
+    if (lastPart.includes('.')) return; // já tem ponto
+    if (lastPart === '') expression += '0';
+    expression += '.';
+    updateDisplay(expression);
+  }
+
+  // Apaga último caractere
+  function deleteLast() {
+    expression = expression.slice(0, -1);
+    updateDisplay(expression || '0');
+  }
+
+  // Limpa tudo
+  function clearAll() {
+    expression = '';
+    displayExpr.textContent = '';
+    updateDisplay('0');
+  }
+
+  // Calcula o resultado
+  function calculate() {
+    if (expression === '') return;
+    try {
+      // Mostra a expressão acima
+      displayExpr.textContent = expression.replace('*','×').replace('/','÷') + ' =';
+      var res = eval(expression); // eval é aceitável em calculadoras simples
+      // Arredonda para evitar floating point longo
+      res = Math.round(res * 1e10) / 1e10;
+      updateDisplay(res);
+      expression = String(res);
+    } catch (e) {
+      updateDisplay('Erro');
+      expression = '';
+    }
+  }
+
+  // Suporte ao teclado
+  document.addEventListener('keydown', function(e) {
+    if (e.key >= '0' && e.key <= '9') appendNum(e.key);
+    else if (e.key === '+') appendOp('+');
+    else if (e.key === '-') appendOp('-');
+    else if (e.key === '*') appendOp('*');
+    else if (e.key === '/') { e.preventDefault(); appendOp('/'); }
+    else if (e.key === '%') appendOp('%');
+    else if (e.key === '.') appendDecimal();
+    else if (e.key === 'Enter' || e.key === '=') calculate();
+    else if (e.key === 'Backspace') deleteLast();
+    else if (e.key === 'Escape') clearAll();
+  });
+</script>
+
+</body>
+</html>
